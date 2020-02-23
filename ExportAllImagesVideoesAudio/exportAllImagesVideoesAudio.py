@@ -93,6 +93,7 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
 
         pass
 
+
     # Process
     def process(self, file):
         # Skip non-files
@@ -104,79 +105,79 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
         # Blackboard
         blackboard = Case.getCurrentCase().getServices().getBlackboard()
 
-	# List of images and videoes
-	listOfMimeToCopy = ['image/bmp','image/gif', 'image/jpeg', 'image/png', 'image/tiff',
-                        'image/vnd.adobe.photoshop', 'image/x-raw-nikon', 'image/x-ms-bmp', 'image/x-icon', 'image/webp',
-                        'image/vnd.microsoft.icon', 'image/x-rgb', 'image/x-ms-bmp','image/x-xbitmap','image/x-portable-graymap',
-                        'image/x-portable-bitmap', 
-			'video/webm', 'video/3gpp', 'video/3gpp2', 'video/ogg','video/mpeg', 
-                        'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-flv', 'video/x-m4v', 
-                        'video/x-ms-wmv', 
-			'audio/midi', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/wav', 
-                        'audio/vnd.wave', 'audio/x-ms-wma']
+        # List of images and videoes
+        listOfMimeToCopy = ['image/bmp','image/gif', 'image/jpeg', 'image/png', 'image/tiff',
+                                'image/vnd.adobe.photoshop', 'image/x-raw-nikon', 'image/x-ms-bmp', 'image/x-icon', 'image/webp',
+                                'image/vnd.microsoft.icon', 'image/x-rgb', 'image/x-ms-bmp','image/x-xbitmap','image/x-portable-graymap',
+                                'image/x-portable-bitmap', 
+                                'video/webm', 'video/3gpp', 'video/3gpp2', 'video/ogg','video/mpeg', 
+                                'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-flv', 'video/x-m4v', 
+                                'video/x-ms-wmv', 
+                                'audio/midi', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/wav', 
+                                'audio/vnd.wave', 'audio/x-ms-wma']
 
-	# Export directory (C:\Users\user\Documents\cases\1568795\Autopsy\1568795_2020_5060_90_1_sofias_pc\Export)
+        # Export directory (C:\Users\user\Documents\cases\1568795\Autopsy\1568795_2020_5060_90_1_sofias_pc\Export)
         exportDirectory = Case.getCurrentCase().getExportDirectory()
-	caseName = Case.getCurrentCase().getName()
-	number = Case.getCurrentCase().getNumber()
-	exportDirectory = exportDirectory.replace("\\Autopsy", "");
-	exportDirectory = exportDirectory.replace("\\" + str(number), "");
-	exportDirectory = exportDirectory.replace("\\Export", "");
-	ImgVideoAudioDirectory = os.path.join(exportDirectory, "Img_video_audio")
-	self.log(Level.INFO, "==>exportDirectory=" + str(exportDirectory) + " number=" + str(number))
-	try: 
-		os.mkdir(ImgVideoAudioDirectory)
-	except:
-		self.log(Level.INFO, "")
+        caseName = Case.getCurrentCase().getName()
+        number = Case.getCurrentCase().getNumber()
+        exportDirectory = exportDirectory.replace("\\Autopsy", "");
+        exportDirectory = exportDirectory.replace("\\" + str(number), "");
+        exportDirectory = exportDirectory.replace("\\Export", "");
+        ImgVideoAudioDirectory = os.path.join(exportDirectory, "Img_video_audio")
+        self.log(Level.INFO, "==>exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        try: 
+                os.mkdir(ImgVideoAudioDirectory)
+        except:
+                self.log(Level.INFO, "")
 
 
         # For an example, we will flag files with .txt in the name and make a blackboard artifact.
-	if(file.getMIMEType() in listOfMimeToCopy):
+        if(file.getMIMEType() in listOfMimeToCopy):
 
-		# Recreate path
-		uniquePathFullLinux = file.getUniquePath();
-		
-		# Recreate path Windows
-		uniquePathFullWindows = uniquePathFullLinux.replace("/", "\\")
-		uniquePathFullWindows = uniquePathFullWindows[1:]
-		
-		fileName = os.path.basename(uniquePathFullWindows)
-		uniquePathWindows = uniquePathFullWindows.replace(fileName, "");
-		
-		# Create directory
-		splitDir = uniquePathWindows.split("\\")
-		pathToCreate = os.path.join(exportDirectory, "Img_video_audio")
-		for directory in splitDir:
-			directory = directory.replace(":", "")
-			pathToCreate = os.path.join(pathToCreate, directory)
-			# self.log(Level.INFO, "==> directory=" + str(directory) + " pathToCreate=" + str(pathToCreate))
+                # Recreate path
+                uniquePathFullLinux = file.getUniquePath();
+                
+                # Recreate path Windows
+                uniquePathFullWindows = uniquePathFullLinux.replace("/", "\\")
+                uniquePathFullWindows = uniquePathFullWindows[1:]
+                
+                fileName = os.path.basename(uniquePathFullWindows)
+                uniquePathWindows = uniquePathFullWindows.replace(fileName, "");
+                
+                # Create directory
+                splitDir = uniquePathWindows.split("\\")
+                pathToCreate = os.path.join(exportDirectory, "Img_video_audio")
+                for directory in splitDir:
+                        directory = directory.replace(":", "")
+                        pathToCreate = os.path.join(pathToCreate, directory)
+                        # self.log(Level.INFO, "==> directory=" + str(directory) + " pathToCreate=" + str(pathToCreate))
 
-			try: 
-				os.mkdir(pathToCreate)
-			except:
-				self.log(Level.INFO, "")
+                        try: 
+                                os.mkdir(pathToCreate)
+                        except:
+                                self.log(Level.INFO, "")
 
-		# Write file
+                # Write file
                 try:
-			extractedFile = os.path.join(pathToCreate, file.getName())
-			ContentUtils.writeToFile(file, File(extractedFile))
+                        extractedFile = os.path.join(pathToCreate, file.getName())
+                        ContentUtils.writeToFile(file, File(extractedFile))
                 except:
-			self.log(Level.SEVERE, "Error writing File " + file.getName() + " to " + extractedFile)
+                        self.log(Level.SEVERE, "Error writing File " + file.getName() + " to " + extractedFile)
 
-		# Make artifact on blackboard
-		art = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT)
-		att = BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME, ExportAllImagesVideoesAudioFactory.moduleName, "Images, videoes and audio")
-		art.addAttribute(att)
+                # Make artifact on blackboard
+                art = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT)
+                att = BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME, ExportAllImagesVideoesAudioFactory.moduleName, "Images, videoes and audio")
+                art.addAttribute(att)
 
-		# Index artifact
-		try:
-			# index the artifact for keyword search
-			blackboard.indexArtifact(art)
-		except Blackboard.BlackboardException as e:
-			self.log(Level.SEVERE, "Error indexing artifact " + art.getDisplayName())
+                # Index artifact
+                try:
+                        # index the artifact for keyword search
+                        blackboard.indexArtifact(art)
+                except Blackboard.BlackboardException as e:
+                        self.log(Level.SEVERE, "Error indexing artifact " + art.getDisplayName())
 
-		# UI
-		IngestServices.getInstance().fireModuleDataEvent(ModuleDataEvent(ExportAllImagesVideoesAudioFactory.moduleName, BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT, None))
+                # UI
+                IngestServices.getInstance().fireModuleDataEvent(ModuleDataEvent(ExportAllImagesVideoesAudioFactory.moduleName, BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT, None))
 
         return IngestModule.ProcessResult.OK
 

@@ -34,13 +34,13 @@ from java.io import File
 # Copy Multimedia Factory ---------------------------------------------------------------------------------------------------
 class ExportAllImagesVideoesAudioFactory(IngestModuleFactoryAdapter):
 
-    moduleName = "Export All Images, Videoes and Audio"
+    moduleName = "Export All Images Videoes and Audio"
 
     def getModuleDisplayName(self):
         return self.moduleName
 
     def getModuleDescription(self):
-        return "Find all images, videoes and audio and exports it to new directory"
+        return "Find all images videoes and audio and exports it to new directory"
 
     def getModuleVersionNumber(self):
         return "1.1"

@@ -5,11 +5,7 @@
 # License: http://opensource.org/licenses/gpl-license.php GNU Public License
 #
 
-import jarray
-import inspect
 import os
-from subprocess import Popen, PIPE
-import json
 
 from java.lang import Class
 from java.lang import System

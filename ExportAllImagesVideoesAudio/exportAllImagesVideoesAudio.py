@@ -2,16 +2,10 @@
 # Version 1.1
 # Date 19:31 25.02.2020
 # Copyright (c) 2020 S. A. Ditlefsen
-# License: http://opensource.org/licenses/gpl-license.php GNU Public License
+# License: https://opensource.org/licenses/GPL-3.0 GNU General Public License version 3
 #
 
-import os
 
-from java.lang import Class
-from java.lang import System
-from java.sql  import DriverManager, SQLException
-from java.util.logging import Level
-from java.io import File
 from org.sleuthkit.datamodel import SleuthkitCase
 from org.sleuthkit.datamodel import AbstractFile
 from org.sleuthkit.datamodel import ReadContentInputStream
@@ -34,6 +28,8 @@ from org.sleuthkit.autopsy.casemodule.services import Services
 from org.sleuthkit.autopsy.casemodule.services import FileManager
 from org.sleuthkit.autopsy.datamodel import ContentUtils
 
+import os
+from java.io import File
 
 # Copy Multimedia Factory ---------------------------------------------------------------------------------------------------
 class ExportAllImagesVideoesAudioFactory(IngestModuleFactoryAdapter):

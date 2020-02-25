@@ -1,6 +1,6 @@
 # File: exportAllImagesVideoesAudio.py
-# Version 0.0.1
-# Date 12:36 23.02.2020
+# Version 1.1
+# Date 19:31 25.02.2020
 # Copyright (c) 2020 S. A. Ditlefsen
 # License: http://opensource.org/licenses/gpl-license.php GNU Public License
 #
@@ -10,22 +10,6 @@ import inspect
 import os
 from subprocess import Popen, PIPE
 import json
-
-from javax.swing import JCheckBox
-from javax.swing import JButton
-from javax.swing import ButtonGroup
-from javax.swing import JTextField
-from javax.swing import JLabel
-from java.awt import GridLayout
-from java.awt import GridBagLayout
-from java.awt import GridBagConstraints
-from javax.swing import JPanel
-from javax.swing import JList
-from javax.swing import JScrollPane
-from javax.swing import JFileChooser
-from javax.swing import JComboBox
-from javax.swing import JPasswordField
-from javax.swing.filechooser import FileNameExtensionFilter
 
 from java.lang import Class
 from java.lang import System
@@ -40,7 +24,7 @@ from org.sleuthkit.datamodel import BlackboardAttribute
 from org.sleuthkit.datamodel import TskData
 from org.sleuthkit.autopsy.ingest import IngestModule
 from org.sleuthkit.autopsy.ingest.IngestModule import IngestModuleException
-from org.sleuthkit.autopsy.ingest import DataSourceIngestModule
+from org.sleuthkit.autopsy.ingest import FileIngestModule
 from org.sleuthkit.autopsy.ingest import IngestModuleFactoryAdapter
 from org.sleuthkit.autopsy.ingest import GenericIngestModuleJobSettings
 from org.sleuthkit.autopsy.ingest import IngestModuleIngestJobSettingsPanel
@@ -58,18 +42,16 @@ from org.sleuthkit.autopsy.datamodel import ContentUtils
 # Copy Multimedia Factory ---------------------------------------------------------------------------------------------------
 class ExportAllImagesVideoesAudioFactory(IngestModuleFactoryAdapter):
 
-    # TODO: give it a unique name.  Will be shown in module list, logs, etc.
-    moduleName = "Export all images, videoes and audio ingest module"
+    moduleName = "Export All Images, Videoes and Audio"
 
     def getModuleDisplayName(self):
         return self.moduleName
 
-    # TODO: Give it a description
     def getModuleDescription(self):
-        return "Find all images, videoes and audio. It copies everything to a new folder. "
+        return "Find all images, videoes and audio and exports it to new directory"
 
     def getModuleVersionNumber(self):
-        return "1.0"
+        return "1.1"
 
     # Return true if module wants to get called for each file
     def isFileIngestModuleFactory(self):
@@ -124,11 +106,11 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
         exportDirectory = exportDirectory.replace("\\" + str(number), "");
         exportDirectory = exportDirectory.replace("\\Export", "");
         ImgVideoAudioDirectory = os.path.join(exportDirectory, "Img_video_audio")
-        self.log(Level.INFO, "==>exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        # self.log(Level.INFO, "==>exportDirectory=" + str(exportDirectory) + " number=" + str(number))
         try: 
                 os.mkdir(ImgVideoAudioDirectory)
         except:
-                self.log(Level.INFO, "")
+                pass
 
 
         # For an example, we will flag files with .txt in the name and make a blackboard artifact.
@@ -155,7 +137,7 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
                         try: 
                                 os.mkdir(pathToCreate)
                         except:
-                                self.log(Level.INFO, "")
+                                pass
 
                 # Write file
                 try:

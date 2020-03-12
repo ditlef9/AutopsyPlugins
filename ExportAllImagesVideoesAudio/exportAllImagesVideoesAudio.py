@@ -1,6 +1,6 @@
 # File: exportAllImagesVideoesAudio.py
-# Version 1.1
-# Date 19:31 25.02.2020
+# Version 1.2
+# Date 21:53 12.03.2020
 # Copyright (c) 2020 S. A. Ditlefsen
 # License: https://opensource.org/licenses/GPL-3.0 GNU General Public License version 3
 #
@@ -30,6 +30,8 @@ from org.sleuthkit.autopsy.datamodel import ContentUtils
 
 import os
 from java.io import File
+from java.util.logging import Level
+import inspect
 
 # Copy Multimedia Factory ---------------------------------------------------------------------------------------------------
 class ExportAllImagesVideoesAudioFactory(IngestModuleFactoryAdapter):
@@ -43,7 +45,7 @@ class ExportAllImagesVideoesAudioFactory(IngestModuleFactoryAdapter):
         return "Find all images videoes and audio and exports it to new directory"
 
     def getModuleVersionNumber(self):
-        return "1.1"
+        return "1.2"
 
     # Return true if module wants to get called for each file
     def isFileIngestModuleFactory(self):
@@ -94,13 +96,30 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
         exportDirectory = Case.getCurrentCase().getExportDirectory()
         caseName = Case.getCurrentCase().getName()
         number = Case.getCurrentCase().getNumber()
+
+	# Export make C:\Users\user\Documents\cases\1568795\
         exportDirectory = exportDirectory.replace("\\Autopsy", "");
         exportDirectory = exportDirectory.replace("\\" + str(number), "");
         exportDirectory = exportDirectory.replace("\\Export", "");
-        ImgVideoAudioDirectory = os.path.join(exportDirectory, "Img_video_audio")
-        # self.log(Level.INFO, "==>exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        #self.log(Level.INFO, "==> 1) exportDirectory=" + str(exportDirectory) + " number=" + str(number) + " caseName=" + str(caseName))
         try: 
-                os.mkdir(ImgVideoAudioDirectory)
+                os.mkdir(exportDirectory)
+        except:
+                pass
+
+	# Export make C:\Users\user\Documents\cases\1568795\Img_video_audio
+        exportDirectory = os.path.join(exportDirectory, "Img_video_audio")
+        #self.log(Level.INFO, "==> 2) exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        try: 
+                os.mkdir(exportDirectory)
+        except:
+                pass
+
+	# Export make C:\Users\user\Documents\cases\1568795\Img_video_audio\1568795_2020_5060_90_1_sofias_pc
+        exportDirectory = os.path.join(exportDirectory, number)
+        #self.log(Level.INFO, "==> 3) exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        try: 
+                os.mkdir(exportDirectory)
         except:
                 pass
 
@@ -117,10 +136,17 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
                 
                 fileName = os.path.basename(uniquePathFullWindows)
                 uniquePathWindows = uniquePathFullWindows.replace(fileName, "");
-                
+		
+		# uniquePathWindows = img_1568795_2020_5060_90_1_sofias_pc.001\vol_vol3\ProgramData\Microsoft\Windows\SystemData\S-1-5-21-1960575443-3642755368-4161086620-1001\ReadOnly\LockScreen_W\
+		# Remove "img_1568795_2020_5060_90_1_sofias_pc.001\"
+                # self.log(Level.INFO, "==> 4) uniquePathWindows=" + str(uniquePathWindows))
+		replaceImgName = "img_" + str(number) + ".001\\"
+                uniquePathWindows = uniquePathWindows.replace(replaceImgName, "");
+		
+
                 # Create directory
                 splitDir = uniquePathWindows.split("\\")
-                pathToCreate = os.path.join(exportDirectory, "Img_video_audio")
+                pathToCreate = os.path.join(exportDirectory, "")
                 for directory in splitDir:
                         directory = directory.replace(":", "")
                         pathToCreate = os.path.join(pathToCreate, directory)

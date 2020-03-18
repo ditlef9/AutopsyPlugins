@@ -1,9 +1,15 @@
 # File: exportAllImagesVideoesAudio.py
-# Version 1.2
-# Date 21:53 12.03.2020
+# Version 1.3
+# Date 08:00 18.03.2020
 # Copyright (c) 2020 S. A. Ditlefsen
 # License: https://opensource.org/licenses/GPL-3.0 GNU General Public License version 3
 #
+# The following ingest modules have to run in order to get this module to work:
+# - File Type Identification
+# - Extension Mismatch Detector
+# - Embedded File Extractor
+# - PhotoRec Carver
+# - Virtual Machine Extractor
 
 
 from org.sleuthkit.datamodel import SleuthkitCase
@@ -45,7 +51,7 @@ class ExportAllImagesVideoesAudioFactory(IngestModuleFactoryAdapter):
         return "Find all images videoes and audio and exports it to new directory"
 
     def getModuleVersionNumber(self):
-        return "1.2"
+        return "1.3"
 
     # Return true if module wants to get called for each file
     def isFileIngestModuleFactory(self):
@@ -67,22 +73,8 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
     def startUp(self, context):
         self.filesFound = 0
 
-        pass
-
-
-    # Process
-    def process(self, file):
-        # Skip non-files
-        if ((file.getType() == TskData.TSK_DB_FILES_TYPE_ENUM.UNALLOC_BLOCKS) or
-            (file.getType() == TskData.TSK_DB_FILES_TYPE_ENUM.UNUSED_BLOCKS) or
-            (file.isFile() == False)):
-            return IngestModule.ProcessResult.OK
-
-        # Blackboard
-        blackboard = Case.getCurrentCase().getServices().getBlackboard()
-
         # List of images and videoes
-        listOfMimeToCopy = ['image/bmp','image/gif', 'image/jpeg', 'image/png', 'image/tiff',
+        self.listOfMimeToCopy = ['image/bmp','image/gif', 'image/jpeg', 'image/png', 'image/tiff',
                                 'image/vnd.adobe.photoshop', 'image/x-raw-nikon', 'image/x-ms-bmp', 'image/x-icon', 'image/webp',
                                 'image/vnd.microsoft.icon', 'image/x-rgb', 'image/x-ms-bmp','image/x-xbitmap','image/x-portable-graymap',
                                 'image/x-portable-bitmap', 
@@ -101,7 +93,7 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
         exportDirectory = exportDirectory.replace("\\Autopsy", "");
         exportDirectory = exportDirectory.replace("\\" + str(number), "");
         exportDirectory = exportDirectory.replace("\\Export", "");
-        #self.log(Level.INFO, "==> 1) exportDirectory=" + str(exportDirectory) + " number=" + str(number) + " caseName=" + str(caseName))
+        self.log(Level.INFO, "==> 1) exportDirectory=" + str(exportDirectory) + " number=" + str(number) + " caseName=" + str(caseName))
         try: 
                 os.mkdir(exportDirectory)
         except:
@@ -109,7 +101,7 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
 
 	# Export make C:\Users\user\Documents\cases\1568795\Img_video_audio
         exportDirectory = os.path.join(exportDirectory, "Img_video_audio")
-        #self.log(Level.INFO, "==> 2) exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        self.log(Level.INFO, "==> 2) exportDirectory=" + str(exportDirectory) + " number=" + str(number))
         try: 
                 os.mkdir(exportDirectory)
         except:
@@ -117,15 +109,35 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
 
 	# Export make C:\Users\user\Documents\cases\1568795\Img_video_audio\1568795_2020_5060_90_1_sofias_pc
         exportDirectory = os.path.join(exportDirectory, number)
-        #self.log(Level.INFO, "==> 3) exportDirectory=" + str(exportDirectory) + " number=" + str(number))
+        self.log(Level.INFO, "==> 3) exportDirectory=" + str(exportDirectory) + " number=" + str(number))
         try: 
                 os.mkdir(exportDirectory)
         except:
                 pass
 
 
+	# Pass parameter
+	self.exportDirectoryGlobal = exportDirectory;
+
+        pass
+
+
+    # Process
+    def process(self, file):
+        # Skip non-files
+        if ((file.getType() == TskData.TSK_DB_FILES_TYPE_ENUM.UNALLOC_BLOCKS) or
+            (file.getType() == TskData.TSK_DB_FILES_TYPE_ENUM.UNUSED_BLOCKS) or
+            (file.isFile() == False)):
+            return IngestModule.ProcessResult.OK
+
+        # Blackboard
+        blackboard = Case.getCurrentCase().getServices().getBlackboard()
+
+
+
+
         # For an example, we will flag files with .txt in the name and make a blackboard artifact.
-        if(file.getMIMEType() in listOfMimeToCopy):
+        if(file.getMIMEType() in self.listOfMimeToCopy):
 
                 # Recreate path
                 uniquePathFullLinux = file.getUniquePath();
@@ -140,13 +152,13 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
 		# uniquePathWindows = img_1568795_2020_5060_90_1_sofias_pc.001\vol_vol3\ProgramData\Microsoft\Windows\SystemData\S-1-5-21-1960575443-3642755368-4161086620-1001\ReadOnly\LockScreen_W\
 		# Remove "img_1568795_2020_5060_90_1_sofias_pc.001\"
                 # self.log(Level.INFO, "==> 4) uniquePathWindows=" + str(uniquePathWindows))
-		replaceImgName = "img_" + str(number) + ".001\\"
+		replaceImgName = "img_" + str(Case.getCurrentCase().getNumber()) + ".001\\"
                 uniquePathWindows = uniquePathWindows.replace(replaceImgName, "");
 		
 
                 # Create directory
                 splitDir = uniquePathWindows.split("\\")
-                pathToCreate = os.path.join(exportDirectory, "")
+                pathToCreate = os.path.join(self.exportDirectoryGlobal, "")
                 for directory in splitDir:
                         directory = directory.replace(":", "")
                         pathToCreate = os.path.join(pathToCreate, directory)

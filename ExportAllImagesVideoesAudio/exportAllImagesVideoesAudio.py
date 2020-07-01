@@ -74,7 +74,7 @@ class ExportAllImagesVideoesAudio(FileIngestModule):
         self.filesFound = 0
 
         # List of images and videoes
-        self.listOfMimeToCopy = ['image/bmp','image/gif', 'image/jpeg', 'image/png', 'image/tiff',
+        self.listOfMimeToCopy = ['image/bmp','image/gif', 'image/heic', 'image/jpeg', 'image/png', 'image/tiff',
                                 'image/vnd.adobe.photoshop', 'image/x-raw-nikon', 'image/x-ms-bmp', 'image/x-icon', 'image/webp',
                                 'image/vnd.microsoft.icon', 'image/x-rgb', 'image/x-ms-bmp','image/x-xbitmap','image/x-portable-graymap',
                                 'image/x-portable-bitmap', 

@@ -77,19 +77,15 @@ class AutopsyToGriffeye(FileIngestModule):
 
     # Startup
     def startUp(self, context):
-        self.filesFound = 0
-
-        # List of images and videoes
+        # List of images and Movies
         self.listOfImagesMimeToCopy = ['image/bmp','image/gif', 'image/heic', 'image/jpeg', 'image/png', 'image/tiff',
                                 'image/vnd.adobe.photoshop', 'image/x-raw-nikon', 'image/x-ms-bmp', 'image/x-icon', 'image/webp',
                                 'image/vnd.microsoft.icon', 'image/x-rgb', 'image/x-ms-bmp','image/x-xbitmap','image/x-portable-graymap',
-                                'image/x-portable-bitmap', ]
+                                'image/x-portable-bitmap']
 
-        self.listOfVideosMimeToCopy = ['video/webm', 'video/3gpp', 'video/3gpp2', 'video/ogg','video/mpeg', 
+        self.listOfMoviesMimeToCopy = ['video/webm', 'video/3gpp', 'video/3gpp2', 'video/ogg','video/mpeg', 
                                 'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-flv', 'video/x-m4v', 
-                                'video/x-ms-wmv', 
-                                'audio/midi', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/wav', 
-                                'audio/vnd.wave', 'audio/x-ms-wma']
+                                'video/x-ms-wmv']
 
         # Export directory
         exportDirectory = Case.getCurrentCase().getExportDirectory()
@@ -103,10 +99,18 @@ class AutopsyToGriffeye(FileIngestModule):
         except:
                 pass
 
+	# Files directory
+        filesDirectory = os.path.join(exportDirectory + "\\Files")
+        self.log(Level.INFO, "==> filesDirectory=" + str(filesDirectory))
+        try: 
+                os.mkdir(filesDirectory)
+        except:
+                pass
+	
 
 	# Image XML file
         xmlFileImages = os.path.join(exportDirectory, str(number) + str(number) + "_images.xml")
-        xmlFileVideoes = os.path.join(exportDirectory, str(number) + str(number) + "_videoes.xml");
+        xmlFileMovies = os.path.join(exportDirectory, str(number) + str(number) + "_movies.xml");
 
         f = open(xmlFileImages, "w")
         f.write('<?xml version="1.0" encoding="utf-16"?>\n')
@@ -116,21 +120,25 @@ class AutopsyToGriffeye(FileIngestModule):
         f.write('	<ReportIndex version="2.0" source="Autopsy" dll="Autopsy To Griffeye 1.4">\n')
         f.close()
 
-        f = open(xmlFileVideoes, "w")
+        f = open(xmlFileMovies, "w")
         f.write('<?xml version="1.0" encoding="utf-16"?>\n')
         f.close()
 
-        f = open(xmlFileVideoes, "a")
+        f = open(xmlFileMovies, "a")
         f.write('	<ReportIndex version="2.0" source="Autopsy" dll="Autopsy To Griffeye 1.4">\n')
         f.close()
 
 	# Pass parameter
 	self.exportDirectoryGlobal = exportDirectory;
+	self.filesDirectoryGlobal = filesDirectory;
 	self.xmlFileImagesGlobal = xmlFileImages;
-	self.xmlFileVideoesGlobal = xmlFileVideoes;
+	self.xmlFileMoviesGlobal = xmlFileMovies;
+	self.countImages = 0
+	self.countMovies = 0
+	self.countImagesAndMovies = 0
 
 	# Write data to log for debug
-	self.log(Level.INFO, "==> Autopsy To Griffeye start info: exportDirectory=" + str(exportDirectory) + " xmlFileImages=" + str(xmlFileImages) + " xmlFileVideoes=" + str(xmlFileVideoes))
+	# self.log(Level.INFO, "==> Autopsy To Griffeye start info: exportDirectory=" + str(exportDirectory) + " xmlFileImages=" + str(xmlFileImages) + " xmlFileMovies=" + str(xmlFileMovies))
 
         pass
 
@@ -146,36 +154,49 @@ class AutopsyToGriffeye(FileIngestModule):
         # Blackboard
         blackboard = Case.getCurrentCase().getServices().getBlackboard()
 
+	# XML Path
+	xmlPath = file.getUniquePath().replace("/", "\\")
+	xmlPath = xmlPath.replace(file.getName(), "")
+	replaceImgNameA = "\\img_" + str(Case.getCurrentCase().getNumber()) + ".001\\"
+	replaceImgNameB = "img_" + str(Case.getCurrentCase().getNumber()) + ".001\\"
+        xmlPath = xmlPath.replace(replaceImgNameA, "");
+        xmlPath = xmlPath.replace(replaceImgNameB, "");
 
+	# XML fullpath
+	xmlFullpath = file.getUniquePath().replace("/", "\\")
+        xmlFullpath = xmlFullpath.replace(replaceImgNameA, "");
+        xmlFullpath = xmlFullpath.replace(replaceImgNameB, "");
+	
 
+	# XML Data
+	xmlId = file.getMd5Hash()
+	xmlCreated = file.getCrtime()
+	xmlAccessed = file.getAtime()
+	xmlWritten = file.getMtime()
+	xmlFileSize = file.getSize()
+	xmlPhysicalLocation = file.getMetaAddr()
+	xmlDeleted = 0
+	xmlMyDescription = "Exisiting"
+	xmlHash = file.getMd5Hash()
 
-        # For an example, we will flag files with .txt in the name and make a blackboard artifact.
+        # Start process images -------------------------------------------------------------------------------------
         if(file.getMIMEType() in self.listOfImagesMimeToCopy):
+		# Count
+		self.countImages = self.countImages+1
+		self.countImagesAndMovies = self.countImagesAndMovies+1
 
-		# XML fullpath
-		xmlFullpath = file.getUniquePath().replace("/", "\\")
-		xmlHash = file.getMd5Hash()
-
-                # Recreate path
-                uniquePathFullLinux = file.getUniquePath();
-                
-                # Recreate path Windows
-                uniquePathFullWindows = uniquePathFullLinux.replace("/", "\\")
-                uniquePathFullWindows = uniquePathFullWindows[1:]
-                
-                fileName = os.path.basename(uniquePathFullWindows)
-                uniquePathWindows = uniquePathFullWindows.replace(fileName, "");
-		
-		# uniquePathWindows = img_1568795_2020_5060_90_1_sofias_pc.001\vol_vol3\ProgramData\Microsoft\Windows\SystemData\S-1-5-21-1960575443-3642755368-4161086620-1001\ReadOnly\LockScreen_W\
-		# Remove "img_1568795_2020_5060_90_1_sofias_pc.001\"
-                # self.log(Level.INFO, "==> 4) uniquePathWindows=" + str(uniquePathWindows))
-		replaceImgName = "img_" + str(Case.getCurrentCase().getNumber()) + ".001\\"
-                uniquePathWindows = uniquePathWindows.replace(replaceImgName, "");
-		
+		# XML Data for picture
+		xmlPicture = file.getName()
 
                 # Create directory
+		uniquePathFullLinux = file.getUniquePath();
+                uniquePathFullWindows = uniquePathFullLinux.replace("/", "\\")
+                uniquePathFullWindows = uniquePathFullWindows[1:]
+                fileName = os.path.basename(uniquePathFullWindows)
+                uniquePathWindows = uniquePathFullWindows.replace(replaceImgNameA, "");
+                uniquePathWindows = uniquePathFullWindows.replace(replaceImgNameB, "");
                 splitDir = uniquePathWindows.split("\\")
-                pathToCreate = os.path.join(self.exportDirectoryGlobal, "")
+                pathToCreate = os.path.join(self.filesDirectoryGlobal, "")
                 for directory in splitDir:
                         directory = directory.replace(":", "")
                         pathToCreate = os.path.join(pathToCreate, directory)
@@ -186,43 +207,44 @@ class AutopsyToGriffeye(FileIngestModule):
                         except:
                                 pass
 
-                # Write file
-                extractedFile = os.path.join(pathToCreate, file.getName())
+                # Write file (here we can use either file.getName or xmlId
                 try:
+                        extractedFile = os.path.join(pathToCreate, file.getName())
                         ContentUtils.writeToFile(file, File(extractedFile))
                 except:
                         self.log(Level.SEVERE, "Error writing File " + file.getName() + " to " + extractedFile)
+
 
 
 		# Write image to XML file
                 try:
                         f = open(self.xmlFileImagesGlobal, "a")
                         f.write("		<Image>\n")
-                        f.write("			<path><![CDATA[Files\]]></path>\n")
-                        f.write("			<picture>+ str(xmlHash) +</picture>\n")
+                        f.write("			<path><![CDATA[" + str(xmlPath) + "]]></path>\n")
+                        f.write("			<picture>" + str(xmlPicture) + "</picture>\n")
                         f.write("			<category>0</category>\n")
-                        f.write("			<id>0</id>\n")
+                        f.write("			<id>" + str(xmlId) + "</id>\n")
                         f.write("			<fileoffset>0</fileoffset>\n")
                         f.write("			<fullpath><![CDATA[" + str(xmlFullpath) + "]]></fullpath>\n")
-                        f.write("			<created>1242837627</created>\n")
-                        f.write("			<accessed>1242837627</accessed>\n")
-                        f.write("			<written>1237311720</written>\n")
-                        f.write("			<deleted>0</deleted>\n")
+                        f.write("			<created>" + str(xmlCreated) + "</created>\n")
+                        f.write("			<accessed>" + str(xmlAccessed) + "</accessed>\n")
+                        f.write("			<written>" + str(xmlWritten) + "</written>\n")
+                        f.write("			<deleted>" + str(xmlDeleted) + "</deleted>\n")
                         f.write("			<hash>" + str(xmlHash) + "</hash>\n")
                         f.write("			<encaseHash>0</encaseHash>\n")
-                        f.write("			<myDescription>Existing</myDescription>\n")
-                        f.write("			<physicalLocation>43680</physicalLocation>\n")
+                        f.write("			<myDescription>" + xmlMyDescription + "</myDescription>\n")
+                        f.write("			<physicalLocation>" + str(xmlPhysicalLocation) + "</physicalLocation>\n")
                         f.write("			<myUnique>0</myUnique>\n")
                         f.write("			<tagged>0</tagged>\n")
                         f.write("			<subCat></subCat>\n")
                         f.write("			<notes></notes>\n")
-                        f.write("			<fileSize>3501981</fileSize>\n")
+                        f.write("			<fileSize>" + str(xmlFileSize) + "</fileSize>\n")
                         f.write("			<bitDepth></bitDepth>\n")
                         f.write("			<aspectRatio></aspectRatio>\n")
                         f.write("		</Image>\n")
                         f.close()
                 except:
-                        self.log(Level.SEVERE, "Error could not append to XML file " + xmlFileImagesGlobal)
+                        self.log(Level.SEVERE, "Error could not append to XML file " + self.xmlFileImagesGlobal)
 
                 # Make artifact on blackboard
                 art = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT)
@@ -239,12 +261,103 @@ class AutopsyToGriffeye(FileIngestModule):
                 # UI
                 IngestServices.getInstance().fireModuleDataEvent(ModuleDataEvent(AutopsyToGriffeyeFactory.moduleName, BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT, None))
 
+
+        # Start process Movies -------------------------------------------------------------------------------------
+        if(file.getMIMEType() in self.listOfMoviesMimeToCopy):
+		# Count
+		self.countMovies = self.countMovies+1
+		self.countImagesAndMovies = self.countImagesAndMovies+1
+
+		# XML Data for picture
+		xmlVideo = file.getName()
+
+                # Create directory
+		uniquePathFullLinux = file.getUniquePath();
+                uniquePathFullWindows = uniquePathFullLinux.replace("/", "\\")
+                uniquePathFullWindows = uniquePathFullWindows[1:]
+                fileName = os.path.basename(uniquePathFullWindows)
+                uniquePathWindows = uniquePathFullWindows.replace(replaceImgNameA, "");
+                uniquePathWindows = uniquePathFullWindows.replace(replaceImgNameB, "");
+                splitDir = uniquePathWindows.split("\\")
+                pathToCreate = os.path.join(self.filesDirectoryGlobal, "")
+                for directory in splitDir:
+                        directory = directory.replace(":", "")
+                        pathToCreate = os.path.join(pathToCreate, directory)
+                        # self.log(Level.INFO, "==> directory=" + str(directory) + " pathToCreate=" + str(pathToCreate))
+
+                        try: 
+                                os.mkdir(pathToCreate)
+                        except:
+                                pass
+
+                # Write file (here we can use either file.getName or xmlId
+                try:
+                        extractedFile = os.path.join(pathToCreate, file.getName())
+                        ContentUtils.writeToFile(file, File(extractedFile))
+                except:
+                        self.log(Level.SEVERE, "Error writing File " + file.getName() + " to " + extractedFile)
+
+
+
+		# Write image to XML file
+                try:
+                        f = open(self.xmlFileMoviesGlobal, "a")
+                        f.write("		<Movie>\n")
+                        f.write("			<path><![CDATA[" + str(xmlPath) + "]]></path>\n")
+                        f.write("			<movie>" + str(xmlMovie) + "</movie>\n")
+                        f.write("			<category>0</category>\n")
+                        f.write("			<id>" + str(xmlId) + "</id>\n")
+                        f.write("			<fileoffset>0</fileoffset>\n")
+                        f.write("			<fullpath><![CDATA[" + str(xmlFullpath) + "]]></fullpath>\n")
+                        f.write("			<created>" + str(xmlCreated) + "</created>\n")
+                        f.write("			<accessed>" + str(xmlAccessed) + "</accessed>\n")
+                        f.write("			<written>" + str(xmlWritten) + "</written>\n")
+                        f.write("			<deleted>" + str(xmlDeleted) + "</deleted>\n")
+                        f.write("			<hash>" + str(xmlHash) + "</hash>\n")
+                        f.write("			<encaseHash>0</encaseHash>\n")
+                        f.write("			<myDescription>" + xmlMyDescription + "</myDescription>\n")
+                        f.write("			<physicalLocation>" + str(xmlPhysicalLocation) + "</physicalLocation>\n")
+                        f.write("			<myUnique>0</myUnique>\n")
+                        f.write("			<tagged>0</tagged>\n")
+                        f.write("			<subCat></subCat>\n")
+                        f.write("			<notes></notes>\n")
+                        f.write("			<fileSize>" + str(xmlFileSize) + "</fileSize>\n")
+                        f.write("		</Movie>\n")
+                        f.close()
+                except:
+                        self.log(Level.SEVERE, "Error could not append to XML file " + self.xmlFileMoviesGlobal)
+
+                # Make artifact on blackboard
+                art = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT)
+                att = BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME, AutopsyToGriffeyeFactory.moduleName, "Movies")
+                art.addAttribute(att)
+
+                # Index artifact
+                try:
+                        # index the artifact for keyword search
+                        blackboard.indexArtifact(art)
+                except Blackboard.BlackboardException as e:
+                        self.log(Level.SEVERE, "Error indexing artifact " + art.getDisplayName())
+
+                # UI
+                IngestServices.getInstance().fireModuleDataEvent(ModuleDataEvent(AutopsyToGriffeyeFactory.moduleName, BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT, None))
+
+
         return IngestModule.ProcessResult.OK
 
     # Shutdown
     def shutDown(self):
+	# Write end of XML files
+        f = open(self.xmlFileImagesGlobal, "a")
+        f.write('	</ReportIndex>\n')
+        f.close()
+
+        f = open(self.xmlFileMoviesGlobal, "a")
+        f.write('	</ReportIndex>\n')
+        f.close()
+
         # As a final part of this example, we'll send a message to the ingest inbox with the number of files found (in this thread)
         message = IngestMessage.createMessage(
             IngestMessage.MessageType.DATA, AutopsyToGriffeyeFactory.moduleName,
-                str(self.filesFound) + " files found")
+                str(self.countImagesAndMovies) + " files found")
         ingestServices = IngestServices.getInstance().postMessage(message)
